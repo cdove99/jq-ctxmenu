@@ -6,15 +6,92 @@
         <link rel="stylesheet" href="./css/jq-ctxmenu.css">
         <script src="./js/jquery-3.4.1.min.js"></script>
         <script src="./js/jq-ctxmenu.js"></script>
+
+        <script>
+            (function() {
+                // Setup
+                $(function() {
+                    // `contextmenu` === right-click
+                    $("span").on("contextmenu", function(evt) {
+                        if ($(this).hasClass("event")) {
+                            $(this).ctxmenu({
+                                items: [
+                                    {
+                                        name: "1", 
+                                        callback: function() {alert("1")},
+                                        class: "itemtest",
+                                    },
+                                    {
+                                        name: "2",
+                                        callback: function() {alert("2")},
+                                        class: "itemtest",
+                                    },
+                                    {
+                                        name: "3",
+                                        callback: function() {alert("3")},
+                                        class: "itemtest",
+                                    },
+                                ],
+                                loc: evt,
+                                class: "test",
+                            });
+                        } else {
+                            var superLongName = "a";
+                            while (superLongName.length < 1000) { 
+                                superLongName += superLongName; 
+                            }
+
+                            $(this).ctxmenu({
+                                items: [
+                                    {
+                                        name: "4", 
+                                        callback: function() {alert("4")},
+                                        class: "itemtest",
+                                    },
+                                    {
+                                        name: "5",
+                                        callback: function() {alert("5")},
+                                        class: "itemtest",
+                                    },
+                                    {
+                                        name: "6",
+                                        callback: function() {alert("6")},
+                                        class: "itemtest",
+                                    },
+                                    {
+                                        name: superLongName,
+                                        callback: function() {alert("6")},
+                                        class: "itemtest",
+                                    },
+                                ],
+                                loc: "element",
+                                class: "test2",
+                            });
+                        }
+                        return false;
+                    });
+                });
+            })();
+        </script>
     </head>
     <body>
         <h1>jQuery ctxmenu</h1>
         <p>Creating context menus or dropdowns</p>
 
+        <br><br><br><br>
+        <p>Create some scroll space</p>
+        <br><br><br><br>
+
         <div>
-            <p>Sample text <span>click here</span> sample text</p>
+            <p>Sample text <span class="event">right click here</span> sample text</p>
         </div>
 
-        <button id="button">Test Button</button>
+        <div>
+            <button><span>Right click me!</span></button>
+        </div>
+
+        <br><br><br><br>
+        <p>Create even more scroll space</p>
+        <br><br><br><br>
     </body>
 </html>

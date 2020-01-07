@@ -1,0 +1,20 @@
+.jq-ctx-menu-parent {
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    color: #000000;
+    display: block;
+    max-height: 300px;
+    max-width: 300px;
+    overflow: auto;
+    position: absolute;
+}
+.jq-ctx-menu-parent ul {
+    display: block;
+    margin: 0;
+    padding: 0;
+}
+.jq-ctx-menu-parent ul .jq-ctx-menu-item {
+    cursor: pointer;
+    display: block;
+    padding: 5px;
+}

@@ -25,11 +25,14 @@ var jqctxDefaults = {
                 $menu = fn.menu(options);
                 $menu.hide();
                 $("body").append($menu);
-                $('body').on('click', function(evt) {
-                    if (!$(evt.target).hasClass(jqctxDefaults.itemcls)) {
-                        $menu.hide();
+                var closer = function(evt) {
+                    var isitem = $(evt.target).hasClass(jqctxDefaults.itemcls);
+                    var isopener = $(evt.target).attr("id") === $(elem).attr("id");
+                    if (!isitem && !isopener) {
+                        fn.close();
                     }
-                });
+                };
+                $('body').off('click', closer).on('click', closer);
             }
             $menu.find("ul").empty();
             // items
@@ -76,7 +79,7 @@ var jqctxDefaults = {
             var _left = pos.left + $menu.outerWidth();
             if (_left > _viewLeft) {  // off screen, flip
                 pos.left -= $menu.outerWidth();
-                if (_type === "elem") pos.left -= elemdim.width;
+                if (_type === "elem") pos.left += elemdim.width;
             }
             // apply
             $menu.css(pos).show();

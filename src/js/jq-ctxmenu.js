@@ -107,7 +107,7 @@ var jqctxDefaults = {
             $item.append("<span>" + value.toString() + "</span>");
             // event
             var callAndClose = function() {
-                var complete = callback();
+                var complete = callback(this);
                 // Close menu if no return/truthy
                 if (complete || complete === undefined) 
                     fn.close();

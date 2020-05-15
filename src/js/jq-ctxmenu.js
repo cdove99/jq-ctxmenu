@@ -3,12 +3,6 @@
  * Create dropdown menus with a simple initialisation!
  * Selected elements should be relatively positioned.
  */
-var jqctxDefaults = {
-    menuid: 'jq-ctx-menu-id',
-    menucls: 'jq-ctx-menu-parent',
-    itemcls: 'jq-ctx-menu-item',
-};
-
 (function($) {
     // functions to assist
     var fn = {
@@ -20,14 +14,15 @@ var jqctxDefaults = {
             if (!Array.isArray(options.items)) 
                 throw Error("No items given for this menu.");
             // find or create menu elem
-            var $menu = $('#'+jqctxDefaults.menuid);
+            var $menu = $('#'+$.ctxmenu.defaults.menuid);
             if ($menu.length === 0) {
                 $menu = fn.menu(options);
                 $menu.hide();
                 $("body").append($menu);
                 var closer = function(evt) {
-                    var isitem = $(evt.target).hasClass(jqctxDefaults.itemcls);
-                    var isopener = $(evt.target).attr("id") === $(elem).attr("id");
+                    var isitem = $(evt.target).hasClass($.ctxmenu.defaults.itemcls);
+                    var isopener = ($(evt.target).attr("id") === $(elem).attr("id") && $(evt.target).get(0).localName === $(elem).get(0).localName);
+
                     if (!isitem && !isopener) {
                         fn.close();
                     }
@@ -48,7 +43,18 @@ var jqctxDefaults = {
             fn.open(elem, $menu, options);
         },
         open: function(elem, $menu, options) {
-            // var
+            $menu.removeClass();  // Clear old classes
+            $menu.addClass($.ctxmenu.defaults.menucls);  // Replace old class
+            if (options.class) $menu.addClass(options.class);
+
+            fn.reposition(elem, $menu, options);
+
+            function resizer() { fn.reposition(elem, $menu, options); }
+            $(window).off('resize', resizer).on('resize', resizer);
+            // apply
+            $menu.show();
+        },
+        reposition: function(elem, $menu, options) {
             var pos = {top: 0, left: 0};
             var elemdim = null;  // Element h/w
             var _type;
@@ -81,18 +87,16 @@ var jqctxDefaults = {
                 pos.left -= $menu.outerWidth();
                 if (_type === "elem") pos.left += elemdim.width;
             }
-            // apply
-            $menu.css(pos).show();
+            $menu.css(pos)
         },
         close: function() {
-            $('#'+jqctxDefaults.menuid).hide();
+            $('#'+$.ctxmenu.defaults.menuid).hide();
         },
         // elem construction
         menu: function(options) {
             var $menu = $("<div></div>");
-            $menu.addClass(jqctxDefaults.menucls)
-            .attr('id',jqctxDefaults.menuid);
-            if (options.class) $menu.addClass(options.class);
+            $menu.addClass($.ctxmenu.defaults.menucls)
+            .attr('id', $.ctxmenu.defaults.menuid);
             // Option list
             $menu.append("<ul></ul>");
             return $menu;
@@ -101,7 +105,7 @@ var jqctxDefaults = {
             if (!callback || !value) return;  // Cancel/ignore
             // create
             var $item = $("<li></li>");
-            $item.addClass(jqctxDefaults.itemcls);
+            $item.addClass($.ctxmenu.defaults.itemcls);
             if (cls) $item.addClass(cls);
             // value
             $item.append("<span>" + value.toString() + "</span>");
@@ -130,5 +134,13 @@ var jqctxDefaults = {
                     return this;
             }
         }
+    };
+    
+    $.ctxmenu = {
+        defaults: {
+            menuid: 'jq-ctx-menu-id',
+            menucls: 'jq-ctx-menu-parent',
+            itemcls: 'jq-ctx-menu-item',
+        },
     };
 })(jQuery);

@@ -38,6 +38,10 @@
                 $(window).off('click', closer).on('click', closer);
             }
             
+            // Update menu parent styling if defined in options 
+            if(options.style){
+                $menu.css(options.style);
+            }
 
             // items (if no renderer)
             if (Array.isArray(options.items) && !options.renderer) {

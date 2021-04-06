@@ -2,8 +2,9 @@
  * jQuery ctxmenu plugin.
  * Create dropdown menus with a simple initialisation!
  * Selected elements should be relatively positioned.
+ * + Added `ctxmenu-shown` and `ctxmenu-closed` events.
  */
-(function($) {
+ (function($) {
     // functions to assist
     var fn = {
         // misc
@@ -11,35 +12,50 @@
         // helpers
         init: function(elem, options) {
             // Create menu elem
-            if (!Array.isArray(options.items)) 
-                throw Error("No items given for this menu.");
+            if (!Array.isArray(options.items) && !$.isFunction(options.renderer)) 
+                throw Error("No items or renderer given for this menu.");
             // find or create menu elem
-            var $menu = $('#'+$.ctxmenu.defaults.menuid);
+            var menuID = (typeof options.id === 'string') ? options.id : $.ctxmenu.defaults.menuid;
+            var $menu = $('#'+menuID);
+
+
             if ($menu.length === 0) {
                 $menu = fn.menu(options);
                 $menu.hide();
                 $("body").append($menu);
-                var closer = function(evt) {
-                    var isitem = $(evt.target).hasClass($.ctxmenu.defaults.itemcls);
-                    var isopener = ($(evt.target).attr("id") === $(elem).attr("id") && $(evt.target).get(0).localName === $(elem).get(0).localName);
 
-                    if (!isitem && !isopener) {
-                        fn.close();
+                var closer = function(evt) {
+                    var isElem = $(evt.target).is(elem);
+                    var isItemOrMenu = $(evt.target).parents('#' + menuID).length || $(evt.target).attr('id') == menuID;
+                    var inMenu = (isElem || isItemOrMenu);
+
+                    if (!inMenu) {
+                        fn.close(options);
+                        $(elem).trigger('ctxmenu-closed');
                     }
                 };
-                $('body').off('click', closer).on('click', closer);
+
+                $(window).off('click', closer).on('click', closer);
             }
-            $menu.find("ul").empty();
-            // items
-            for (var i=0; i<options.items.length; i++) {
-                var item = options.items[i];
-                $menu.find("ul").append(fn.item(
-                    item.name,
-                    item.callback,
-                    item.class
-                ));
+            
+
+            // items (if no renderer)
+            if (Array.isArray(options.items) && !options.renderer) {
+                $menu.find("ul").empty();
+
+                for (var i=0; i<options.items.length; i++) {
+                    var item = options.items[i];
+                    $menu.find("ul").append(fn.item(
+                        options,
+                        item.name,
+                        item.callback,
+                        item.class
+                    ));
+                }
             }
+
             // open
+            $(elem).data('ctxmenuid', menuID);
             fn.open(elem, $menu, options);
         },
         open: function(elem, $menu, options) {
@@ -50,9 +66,10 @@
             fn.reposition(elem, $menu, options);
 
             function resizer() { fn.reposition(elem, $menu, options); }
-            $(window).off('resize', resizer).on('resize', resizer);
+            $(window).off('resize scroll', resizer).on('resize scroll', resizer);
             // apply
             $menu.show();
+            $(elem).trigger('ctxmenu-shown');
         },
         reposition: function(elem, $menu, options) {
             var pos = {top: 0, left: 0};
@@ -89,19 +106,33 @@
             }
             $menu.css(pos)
         },
-        close: function() {
-            $('#'+$.ctxmenu.defaults.menuid).hide();
+        close: function(options) {
+            var menuID = (typeof options.id === 'string') ? options.id : $.ctxmenu.defaults.menuid;
+
+            $('#'+menuID).hide();
+        },
+        forceClose: function(elem) {
+            // Programmatically closing a menu
+            var menuID = $(elem).data('ctxmenuid');
+
+            $('#'+menuID).hide();
         },
         // elem construction
         menu: function(options) {
             var $menu = $("<div></div>");
+            var menuID = (typeof options.id === 'string') ? options.id : $.ctxmenu.defaults.menuid;
+
             $menu.addClass($.ctxmenu.defaults.menucls)
-            .attr('id', $.ctxmenu.defaults.menuid);
+            .attr('id', menuID);
             // Option list
-            $menu.append("<ul></ul>");
+            if ($.isFunction(options.renderer)) {
+                $menu.append(options.renderer(options));
+            } else {
+                $menu.append("<ul></ul>");
+            }
             return $menu;
         },
-        item: function(value, callback, cls) {
+        item: function(options, value, callback, cls) {
             if (!callback || !value) return;  // Cancel/ignore
             // create
             var $item = $("<li></li>");
@@ -114,7 +145,7 @@
                 var complete = callback(this);
                 // Close menu if no return/truthy
                 if (complete || complete === undefined) 
-                    fn.close();
+                    fn.close(options);
             };
             fn.bind($item, "click", callAndClose);
             return $item;
@@ -124,11 +155,15 @@
     $.fn.ctxmenu = function(options) {  
         if (typeof options === "object" && !Array.isArray(options)) {
             // init
-            return this.each(function() { fn.init(this, options); });
+            return this.each(function() { 
+                fn.init(this, options);
+             });
         } else {
             switch (options) {
                 case 'destroy':
                     return this.each(function() { fn.destroy(this); });
+                case 'close':
+                    return this.each(function() { fn.forceClose(this); })
                 default:
                     console.warn('Unrecognised action, ignoring.');
                     return this;
